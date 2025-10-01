@@ -22,6 +22,77 @@ const createBus = async (req, res) => {
   }
 };
 
+// Controller to get buses with optional filtering
+const getBuses = async (req, res) => {
+  try {
+    // Pass the query parameters from the request to the service
+    const buses = await busService.getBuses(req.query);
+    res.status(200).json(buses);
+  } catch (error) {
+    res.status(500).json({ message: 'Error retrieving buses.', error: error.message });
+  }
+};
+
+// Controller to get a single bus by its license plate
+const getBusByPlate = async (req, res) => {
+  try {
+    const { licensePlate } = req.params; // Extract licensePlate from URL
+    const bus = await busService.getBusByPlate(licensePlate);
+
+    if (!bus) {
+      return res.status(404).json({ message: 'Bus not found.' });
+    }
+
+    res.status(200).json(bus);
+  } catch (error) {
+    res.status(500).json({ message: 'Error retrieving bus.', error: error.message });
+  }
+};
+
+// Controller to update a bus's details by its license plate
+const updateBusByPlate = async (req, res) => {
+  try {
+    const { licensePlate } = req.params;
+    const updateData = req.body;
+
+    // A simple validation to ensure there's something to update
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ message: 'No update data provided.' });
+    }
+
+    const updatedBus = await busService.updateBusByPlate(licensePlate, updateData);
+
+    if (!updatedBus) {
+      return res.status(404).json({ message: 'Bus not found.' });
+    }
+
+    res.status(200).json(updatedBus);
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating bus.', error: error.message });
+  }
+};
+
+// Controller to delete a bus by its license plate
+const deleteBusByPlate = async (req, res) => {
+  try {
+    const { licensePlate } = req.params;
+    const deletedBus = await busService.deleteBusByPlate(licensePlate);
+
+    if (!deletedBus) {
+      return res.status(404).json({ message: 'Bus not found.' });
+    }
+
+    // Send a confirmation message
+    res.status(200).json({ message: 'Bus deleted successfully.' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting bus.', error: error.message });
+  }
+};
+
 module.exports = {
   createBus,
+  getBuses,
+  getBusByPlate,
+  updateBusByPlate,
+  deleteBusByPlate, // Export the new function
 };

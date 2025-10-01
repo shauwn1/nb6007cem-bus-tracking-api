@@ -1,8 +1,13 @@
+// Load environment variables FIRST
+require('dotenv').config();
+
 const express = require('express');
 const connectDB = require('./config/db');
 
 // Import your new routes
 const busRoutes = require('./routes/bus.routes');
+const routeRoutes = require('./routes/route.routes');
+const scheduleRoutes = require('./routes/schedule.routes');
 
 // Establish the database connection
 connectDB();
@@ -20,6 +25,8 @@ app.get('/', (req, res) => {
 // Instruct the app to use the busRoutes for any request
 // that starts with /api/v1/buses
 app.use('/api/v1/buses', busRoutes);
+app.use('/api/v1/routes', routeRoutes);
+app.use('/api/v1/schedules', scheduleRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

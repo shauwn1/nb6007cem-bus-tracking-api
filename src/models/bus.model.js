@@ -4,7 +4,7 @@ const busSchema = new mongoose.Schema({
   licensePlate: {
     type: String,
     required: true,
-    unique: true, // Ensures no two buses have the same license plate
+    unique: true,
     trim: true,
   },
   model: {
@@ -15,8 +15,14 @@ const busSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  // Add a reference to the Route model
+  routeId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Route', // This links to the 'Route' model
+    required: false, // Make it optional for now
+  }
 }, {
-  timestamps: true, // Automatically adds `createdAt` and `updatedAt` fields
+  timestamps: true,
 });
 
 const Bus = mongoose.model('Bus', busSchema);
