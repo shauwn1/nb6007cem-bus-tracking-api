@@ -53,10 +53,53 @@ const deleteRouteByNumber = async (routeNumber) => {
   return deletedRoute;
 };
 
+// Service to get live locations of all active buses on a route
+const getActiveBusLocationsByRoute = async (routeNumber) => {
+  // 1. Find the route by its number
+  const route = await Route.findOne({ routeNumber: routeNumber });
+  if (!route) {
+    throw new Error('Route not found');
+  }
+
+  // 2. Find all active (departed) schedules for this route
+  const activeSchedules = await Schedule.find({
+    routeId: route._id,
+    status: 'Departed'
+  }).populate('busId'); // Populate bus details
+
+  if (activeSchedules.length === 0) {
+    return []; // No active buses on this route
+  }
+
+  // 3. For each active schedule, find its latest location
+  const locationPromises = activeSchedules.map(schedule => {
+    return Location.findOne({ scheduleId: schedule._id })
+      .sort({ timestamp: -1 })
+      .then(location => {
+        if (location) {
+          // Combine bus info with location info for a useful response
+          return {
+            bus: schedule.busId, // The populated bus details
+            location: location.coordinates,
+            timestamp: location.timestamp
+          };
+        }
+        return null;
+      });
+  });
+
+  // Wait for all location lookups to complete
+  const locations = await Promise.all(locationPromises);
+
+  // Filter out any buses that have a schedule but no location data yet
+  return locations.filter(loc => loc !== null);
+};
+
 module.exports = {
   createRoute,
   getRoutes,
   getRouteByNumber,
   updateRouteByNumber,
   deleteRouteByNumber,
+  getActiveBusLocationsByRoute, // Export the new function
 };

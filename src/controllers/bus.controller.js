@@ -89,10 +89,27 @@ const deleteBusByPlate = async (req, res) => {
   }
 };
 
+// Controller to get the last known location of a bus by its license plate
+const getLastLocationByPlate = async (req, res) => {
+  try {
+    const { licensePlate } = req.params;
+    const location = await busService.getLastLocationByPlate(licensePlate);
+
+    if (!location) {
+      return res.status(404).json({ message: 'Location data not found for this bus.' });
+    }
+
+    res.status(200).json(location);
+  } catch (error) {
+    res.status(500).json({ message: 'Error retrieving bus location.', error: error.message });
+  }
+};
+
 module.exports = {
   createBus,
   getBuses,
   getBusByPlate,
   updateBusByPlate,
-  deleteBusByPlate, // Export the new function
+  deleteBusByPlate,
+  getLastLocationByPlate, // Export the new function
 };

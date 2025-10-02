@@ -81,10 +81,27 @@ const deleteRouteByNumber = async (req, res) => {
   }
 };
 
+// Controller to get live locations of all active buses on a route
+const getActiveBusLocationsByRoute = async (req, res) => {
+  try {
+    const { routeNumber } = req.params;
+    const locations = await routeService.getActiveBusLocationsByRoute(routeNumber);
+
+    if (!locations || locations.length === 0) {
+      return res.status(404).json({ message: 'No active buses found for this route.' });
+    }
+
+    res.status(200).json(locations);
+  } catch (error) {
+    res.status(500).json({ message: 'Error retrieving active bus locations.', error: error.message });
+  }
+};
+
 module.exports = {
   createRoute,
   getRoutes,
   getRouteByNumber,
   updateRouteByNumber,
   deleteRouteByNumber,
+  getActiveBusLocationsByRoute, // Export the new function
 };

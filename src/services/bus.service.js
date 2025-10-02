@@ -96,10 +96,37 @@ const deleteBusByPlate = async (licensePlate) => {
   return deletedBus;
 };
 
+// Service to get the last known location of a bus
+const getLastLocationByPlate = async (licensePlate) => {
+  // 1. Find the bus by its license plate
+  const bus = await Bus.findOne({ licensePlate: licensePlate });
+  if (!bus) {
+    throw new Error('Bus not found');
+  }
+
+  // 2. Find the current, active schedule for this bus
+  // We'll assume the most recent schedule is the active one for simplicity.
+  const schedule = await Schedule.findOne({ 
+    busId: bus._id,
+    status: 'Departed' // Only track departed buses
+  }).sort({ departureTime: -1 }); // Get the latest schedule
+
+  if (!schedule) {
+    return null; // No active schedule found for this bus
+  }
+
+  // 3. Find the most recent location update for that schedule
+  const lastLocation = await Location.findOne({ scheduleId: schedule._id })
+    .sort({ timestamp: -1 }); // Sort by timestamp in descending order and get the first one
+
+  return lastLocation;
+};
+
 module.exports = {
   createBus,
   getBuses,
   getBusByPlate,
   updateBusByPlate,
-  deleteBusByPlate, // Export the new function
+  deleteBusByPlate,
+  getLastLocationByPlate, // Export the new function
 };

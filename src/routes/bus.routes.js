@@ -17,4 +17,7 @@ router.put('/by-plate/:licensePlate', busController.updateBusByPlate);
 // DELETE /api/v1/buses/by-plate/:licensePlate
 router.delete('/by-plate/:licensePlate', busController.deleteBusByPlate);
 
+// GET /api/v1/buses/by-plate/:licensePlate/location
+router.get('/by-plate/:licensePlate/location', busController.getLastLocationByPlate);
+
 module.exports = router;

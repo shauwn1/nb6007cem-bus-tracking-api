@@ -16,4 +16,7 @@ router.put('/:routeNumber', routeController.updateRouteByNumber);
 // DELETE /api/v1/routes/:routeNumber
 router.delete('/:routeNumber', routeController.deleteRouteByNumber);
 
+// GET /api/v1/routes/:routeNumber/buses
+router.get('/:routeNumber/buses', routeController.getActiveBusLocationsByRoute);
+
 module.exports = router;
