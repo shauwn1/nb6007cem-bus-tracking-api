@@ -10,14 +10,11 @@ const options = {
     },
     servers: [
       {
-        url: 'https://ntc-bus-api.onrender.com',
-        description: 'Production server',
-      },
-      {
         url: 'http://localhost:3000',
         description: 'Development server',
       },
     ],
+    // Add this components section with securitySchemes
     components: {
       securitySchemes: {
         ApiKeyAuth: {
