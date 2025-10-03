@@ -1,123 +1,93 @@
 const Bus = require('../models/bus.model');
+const Route = require('../models/route.model');
+const Schedule = require('../models/schedule.model');
+const Location = require('../models/location.model');
 
-// Contains the core logic for creating a bus in the database
+// This function is correct as it just passes data.
 const createBus = async (busData) => {
   try {
-    // The Bus.create() method creates a new document based on the model
-    // and saves it to the MongoDB database.
     const newBus = await Bus.create(busData);
     return newBus;
   } catch (error) {
-    // Propagates any database errors (e.g., unique key violation)
-    // up to the controller to be handled.
     throw new Error(error.message);
   }
 };
 
-// Service to get buses with filtering
+// CORRECTED SERVICE FOR GETTING BUSES
 const getBuses = async (filters) => {
-  const { routeId, startPoint, endPoint } = filters;
+  const { routeNumber, startPoint, endPoint } = filters;
   let query = {};
 
-  if (routeId) {
-    query.routeId = routeId;
+  if (routeNumber) {
+    // Query directly on the routeNumber field in the Bus model
+    query.routeNumber = routeNumber;
   }
 
-  // Handle the advanced startPoint and endPoint search
-  if (startPoint && endPoint) {
-    // We need to find routes that contain both the start and end points in their path.
-    const routes = await Route.find({}); // Get all routes to check them
-    
-    const matchingRouteIds = routes.filter(route => {
-      // Create the full path for each route
-      const fullPath = [route.startPoint.toLowerCase(), ...route.waypoints.map(w => w.toLowerCase()), route.endPoint.toLowerCase()];
-      
-      const startIndex = fullPath.indexOf(startPoint.toLowerCase());
-      const endIndex = fullPath.indexOf(endPoint.toLowerCase());
-      
-      // The route is a match if both points exist and start comes before end
-      return startIndex !== -1 && endIndex !== -1 && startIndex < endIndex;
-    }).map(route => route._id);
-
-    if (matchingRouteIds.length === 0) {
-      return [];
-    }
-    
-    query.routeId = { $in: matchingRouteIds };
-    
-  } else if (startPoint || endPoint) {
-    // Simplified search if only one point is given
+  if (startPoint || endPoint) {
     const routeQuery = {};
-    const pointToSearch = startPoint || endPoint;
-    
-    routeQuery.$or = [
-        { startPoint: new RegExp(pointToSearch, 'i') },
-        { waypoints: new RegExp(pointToSearch, 'i') },
-        { endPoint: new RegExp(pointToSearch, 'i') }
-    ];
-    
-    const matchingRoutes = await Route.find(routeQuery).select('_id');
-    const matchingRouteIds = matchingRoutes.map(route => route._id);
+    if (startPoint) {
+      routeQuery.startPoint = new RegExp(startPoint, 'i');
+    }
+    if (endPoint) {
+      routeQuery.endPoint = new RegExp(endPoint, 'i');
+    }
 
-    if (matchingRouteIds.length === 0) {
+    const matchingRoutes = await Route.find(routeQuery).select('routeNumber');
+    const matchingRouteNumbers = matchingRoutes.map(route => route.routeNumber);
+    
+    if (matchingRouteNumbers.length === 0) {
       return [];
     }
     
-    query.routeId = { $in: matchingRouteIds };
+    // Find buses where the routeNumber is one of the matched numbers
+    query.routeNumber = { $in: matchingRouteNumbers };
   }
 
-  const buses = await Bus.find(query).populate('routeId');
+  // Use the new virtual field 'route' for population
+  const buses = await Bus.find(query).populate('route');
   return buses;
 };
 
-// Service to get a single bus by its license plate
+// CORRECTED SERVICE FOR GETTING A SINGLE BUS
 const getBusByPlate = async (licensePlate) => {
-  // Use Mongoose's findOne method to search by the licensePlate field
-  const bus = await Bus.findOne({ licensePlate: licensePlate }).populate('routeId');
+  const bus = await Bus.findOne({ licensePlate: licensePlate }).populate('route');
   return bus;
 };
 
-// Service to update a bus's details by its license plate
+// CORRECTED SERVICE FOR UPDATING A BUS
 const updateBusByPlate = async (licensePlate, updateData) => {
-  // Use findOneAndUpdate to find the bus and apply the new data.
-  // The { new: true } option ensures the method returns the updated document.
   const updatedBus = await Bus.findOneAndUpdate(
     { licensePlate: licensePlate },
     updateData,
     { new: true, runValidators: true }
-  ).populate('routeId');
-
+  ).populate('route');
   return updatedBus;
 };
 
-// Service to delete a bus by its license plate
+// This function is correct as it doesn't involve routes.
 const deleteBusByPlate = async (licensePlate) => {
   const deletedBus = await Bus.findOneAndDelete({ licensePlate: licensePlate });
   return deletedBus;
 };
 
-// Service to get the last known location of a bus
+// This function is correct as it uses the bus._id internally.
 const getLastLocationByPlate = async (licensePlate) => {
-  // 1. Find the bus by its license plate
   const bus = await Bus.findOne({ licensePlate: licensePlate });
   if (!bus) {
     throw new Error('Bus not found');
   }
 
-  // 2. Find the current, active schedule for this bus
-  // We'll assume the most recent schedule is the active one for simplicity.
   const schedule = await Schedule.findOne({ 
     busId: bus._id,
-    status: 'Departed' // Only track departed buses
-  }).sort({ departureTime: -1 }); // Get the latest schedule
+    status: 'Departed'
+  }).sort({ departureTime: -1 });
 
   if (!schedule) {
-    return null; // No active schedule found for this bus
+    return null;
   }
 
-  // 3. Find the most recent location update for that schedule
   const lastLocation = await Location.findOne({ scheduleId: schedule._id })
-    .sort({ timestamp: -1 }); // Sort by timestamp in descending order and get the first one
+    .sort({ timestamp: -1 });
 
   return lastLocation;
 };
@@ -128,5 +98,5 @@ module.exports = {
   getBusByPlate,
   updateBusByPlate,
   deleteBusByPlate,
-  getLastLocationByPlate, // Export the new function
+  getLastLocationByPlate,
 };

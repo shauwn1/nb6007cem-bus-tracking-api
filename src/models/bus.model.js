@@ -15,16 +15,22 @@ const busSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
-  // Add a reference to the Route model
-  routeId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Route', // This links to the 'Route' model
-    required: false, // Make it optional for now
+  routeNumber: {
+    type: String,
+    required: false,
   }
 }, {
   timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
+});
+
+busSchema.virtual('route', {
+  ref: 'Route',
+  localField: 'routeNumber',
+  foreignField: 'routeNumber',
+  justOne: true
 });
 
 const Bus = mongoose.model('Bus', busSchema);
-
 module.exports = Bus;
