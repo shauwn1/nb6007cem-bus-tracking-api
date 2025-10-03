@@ -3,6 +3,7 @@ require('dotenv').config();
 
 const express = require('express');
 const connectDB = require('./config/db');
+const cors = require('cors'); 
 
 // Import your new routes
 const busRoutes = require('./routes/bus.routes');
@@ -18,8 +19,8 @@ connectDB();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware to parse incoming JSON request bodies. This is essential.
 app.use(express.json());
+app.use(cors());
 
 app.get('/', (req, res) => {
   res.send('NTC Bus Tracking API is running!');
