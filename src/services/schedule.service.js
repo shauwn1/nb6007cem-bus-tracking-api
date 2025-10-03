@@ -1,79 +1,82 @@
 const Schedule = require('../models/schedule.model');
+const Bus = require('../models/bus.model');
+const Route = require('../models/route.model');
 
-// Service to create a new schedule
+// This function is correct.
 const createSchedule = async (scheduleData) => {
   try {
-    // You could add logic here to prevent double-booking a bus for the same time
-    const newSchedule = await Schedule.create(scheduleData);
+    const { licensePlate, routeNumber, departureTime, arrivalTime } = scheduleData;
+    const bus = await Bus.findOne({ licensePlate: licensePlate });
+    if (!bus) throw new Error(`Bus with license plate ${licensePlate} not found.`);
+    
+    const route = await Route.findOne({ routeNumber: routeNumber });
+    if (!route) throw new Error(`Route with number ${routeNumber} not found.`);
+
+    const newSchedule = await Schedule.create({
+      busId: bus._id,
+      routeId: route._id,
+      departureTime,
+      arrivalTime
+    });
     return newSchedule;
   } catch (error) {
     throw new Error(error.message);
   }
 };
 
-// Service to get schedules with filtering
+// This function is now corrected to filter by status.
 const getSchedules = async (filters) => {
   const query = {};
 
-  if (filters.routeId) {
-    query.routeId = filters.routeId;
+  if (filters.status) {
+    query.status = filters.status;
   }
 
-  // If a date is provided, find all schedules for that entire day
   if (filters.date) {
     const startDate = new Date(filters.date);
-    startDate.setUTCHours(0, 0, 0, 0); // Start of the day in UTC
-
+    startDate.setUTCHours(0, 0, 0, 0);
     const endDate = new Date(filters.date);
-    endDate.setUTCHours(23, 59, 59, 999); // End of the day in UTC
-    
-    query.departureTime = {
-      $gte: startDate, // Greater than or equal to the start of the day
-      $lte: endDate,   // Less than or equal to the end of the day
-    };
+    endDate.setUTCHours(23, 59, 59, 999);
+    query.departureTime = { $gte: startDate, $lte: endDate };
   }
 
-  // Populate busId and routeId to include their full details in the response
   const schedules = await Schedule.find(query)
     .populate('busId')
     .populate('routeId');
-    
   return schedules;
 };
 
-// Service to get a single schedule by its ID
-const getScheduleById = async (scheduleId) => {
-  // Use Mongoose's findById and populate the bus and route details
-  const schedule = await Schedule.findById(scheduleId)
+// NEW: Service to get a single schedule by its tripCode
+const getScheduleByCode = async (tripCode) => {
+  const schedule = await Schedule.findOne({ tripCode: tripCode })
     .populate('busId')
     .populate('routeId');
-    
   return schedule;
 };
 
-// Service to update a schedule by its ID
-const updateScheduleById = async (scheduleId, updateData) => {
-  const updatedSchedule = await Schedule.findByIdAndUpdate(
-    scheduleId,
+// CORRECTED: Service to update a schedule by its tripCode
+const updateScheduleByCode = async (tripCode, updateData) => {
+  const updatedSchedule = await Schedule.findOneAndUpdate(
+    { tripCode: tripCode },
     updateData,
-    { new: true, runValidators: true } // Return the updated document
+    { new: true, runValidators: true }
   )
     .populate('busId')
     .populate('routeId');
-    
   return updatedSchedule;
 };
 
-// Service to delete a schedule by its ID
-const deleteScheduleById = async (scheduleId) => {
-  const deletedSchedule = await Schedule.findByIdAndDelete(scheduleId);
+// NEW: Service to delete a schedule by its tripCode
+const deleteScheduleByCode = async (tripCode) => {
+  const deletedSchedule = await Schedule.findOneAndDelete({ tripCode: tripCode });
   return deletedSchedule;
 };
 
+// CORRECTED EXPORTS: Only export the functions that are actually used.
 module.exports = {
   createSchedule,
   getSchedules,
-  getScheduleById,
-  updateScheduleById,
-  deleteScheduleById, // Export the new function
+  getScheduleByCode,
+  updateScheduleByCode,
+  deleteScheduleByCode,
 };

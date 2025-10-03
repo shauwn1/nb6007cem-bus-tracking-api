@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const AutoIncrement = require('mongoose-sequence')(mongoose);
 
 const scheduleSchema = new mongoose.Schema({
   busId: {
@@ -15,7 +16,7 @@ const scheduleSchema = new mongoose.Schema({
     type: Date,
     required: true,
   },
-  arrivalTime: { // Estimated arrival time
+  arrivalTime: {
     type: Date,
     required: true,
   },
@@ -28,6 +29,11 @@ const scheduleSchema = new mongoose.Schema({
   timestamps: true,
 });
 
-const Schedule = mongoose.model('Schedule', scheduleSchema);
+scheduleSchema.plugin(AutoIncrement, {
+  inc_field: 'tripCode',
+  id: 'tripCode_counter',
+  start_seq: 101,
+});
 
+const Schedule = mongoose.model('Schedule', scheduleSchema);
 module.exports = Schedule;

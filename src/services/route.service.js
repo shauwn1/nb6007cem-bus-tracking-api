@@ -1,4 +1,6 @@
 const Route = require('../models/route.model');
+const Schedule = require('../models/schedule.model');
+const Location = require('../models/location.model');
 
 // Contains the core logic for creating a route in the database
 const createRoute = async (routeData) => {

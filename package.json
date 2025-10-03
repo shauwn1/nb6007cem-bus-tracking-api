@@ -3,8 +3,10 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "node src/index.js",
-    "dev": "nodemon src/index.js"
+    "dev": "nodemon src/index.js",
+    "start:api": "node src/index.js",
+    "start:sim": "node simulation.js",
+    "start": "npm-run-all --parallel start:api start:sim"
   },
   "repository": {
     "type": "git",
@@ -19,9 +21,14 @@
   "homepage": "https://github.com/shauwn1/nb6007cem-bus-tracking-api#readme",
   "description": "",
   "dependencies": {
+    "axios": "^1.12.2",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
-    "mongoose": "^8.18.2"
+    "mongoose": "^8.18.2",
+    "mongoose-sequence": "^6.0.1",
+    "npm-run-all": "^4.1.5",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"

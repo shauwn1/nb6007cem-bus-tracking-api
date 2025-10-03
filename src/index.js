@@ -8,6 +8,9 @@ const connectDB = require('./config/db');
 const busRoutes = require('./routes/bus.routes');
 const routeRoutes = require('./routes/route.routes');
 const scheduleRoutes = require('./routes/schedule.routes');
+const locationRoutes = require('./routes/location.routes');
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./config/swagger');
 
 // Establish the database connection
 connectDB();
@@ -27,6 +30,8 @@ app.get('/', (req, res) => {
 app.use('/api/v1/buses', busRoutes);
 app.use('/api/v1/routes', routeRoutes);
 app.use('/api/v1/schedules', scheduleRoutes);
+app.use('/api/v1/locations', locationRoutes);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
