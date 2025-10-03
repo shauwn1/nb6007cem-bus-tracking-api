@@ -25,6 +25,10 @@ app.get('/', (req, res) => {
   res.send('NTC Bus Tracking API is running!');
 });
 
+app.get('/api-docs/', (req, res) => {
+  res.redirect('/api-docs');
+});
+
 // Instruct the app to use the busRoutes for any request
 // that starts with /api/v1/buses
 app.use('/api/v1/buses', busRoutes);
