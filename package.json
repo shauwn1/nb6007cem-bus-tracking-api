@@ -3,11 +3,10 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon src/index.js",
-    "start:api": "node src/index.js",
-    "start:sim": "node simulation.js",
-    "start": "npm-run-all --parallel start:api start:sim"
-  },
+  "start": "node src/index.js",
+  "dev": "npm-run-all --parallel start start:sim",
+  "start:sim": "node simulation.js"
+},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/shauwn1/nb6007cem-bus-tracking-api.git"
