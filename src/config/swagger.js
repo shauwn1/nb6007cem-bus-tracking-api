@@ -6,7 +6,7 @@ const options = {
     info: {
       title: 'NTC Bus Tracking API',
       version: '1.0.0',
-      description: 'API for the Real-Time Bus Tracking System for the National Transport Commission of Sri Lanka (NTC).',
+      description: 'API for the Real-Time Bus Tracking System for the NTC.',
     },
     servers: [
       {
@@ -14,9 +14,23 @@ const options = {
         description: 'Development server',
       },
     ],
+    // Add this components section with securitySchemes
+    components: {
+      securitySchemes: {
+        ApiKeyAuth: {
+          type: 'apiKey',
+          in: 'header',
+          name: 'x-api-key',
+        },
+      },
+    },
+    security: [
+      {
+        ApiKeyAuth: [],
+      },
+    ],
   },
-  // Path to the API docs
-  apis: ['./src/routes/*.js'], // Gathers comments from all files in the routes folder
+  apis: ['./src/routes/*.js', './src/swagger/swagger.definitions.js'],
 };
 
 const swaggerSpec = swaggerJsdoc(options);

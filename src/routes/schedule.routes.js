@@ -1,13 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const scheduleController = require('../controllers/schedule.controller');
+const { authenticate, checkPermission } = require('../middleware/auth.middleware');
 
 /**
  * @swagger
  * /api/v1/schedules:
  *   post:
- *     summary: Schedule a new trip for a bus
+ *     summary: Schedule a new trip (Admin or Operator Only)
  *     tags: [Schedules]
+ *     security:
+ *       - ApiKeyAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -28,10 +31,13 @@ const scheduleController = require('../controllers/schedule.controller');
  *     responses:
  *       '201':
  *         description: The trip was successfully scheduled
- *       '500':
- *         description: Server error
+ *       '401':
+ *         description: Unauthorized - API Key missing or invalid
+ *       '403':
+ *         description: Forbidden - Insufficient permissions
  */
-router.post('/', scheduleController.createSchedule);
+router.post('/', authenticate, checkPermission(['admin', 'operator']), scheduleController.createSchedule);
+
 
 /**
  * @swagger
@@ -83,14 +89,16 @@ router.get('/:tripCode', scheduleController.getScheduleByCode);
  * @swagger
  * /api/v1/schedules/{tripCode}:
  *   put:
- *     summary: Update a scheduled trip by its trip code
+ *     summary: Update a scheduled trip (Admin or Operator Only)
  *     tags: [Schedules]
+ *     security:
+ *       - ApiKeyAuth: []
  *     parameters:
  *       - in: path
  *         name: tripCode
+ *         required: true
  *         schema:
  *           type: number
- *         required: true
  *         description: The trip code
  *     requestBody:
  *       required: true
@@ -102,39 +110,40 @@ router.get('/:tripCode', scheduleController.getScheduleByCode);
  *               status:
  *                 type: string
  *                 enum: [Scheduled, Departed, Arrived, Cancelled]
- *               departureTime:
- *                 type: string
- *                 format: date-time
- *               arrivalTime:
- *                 type: string
- *                 format: date-time
  *     responses:
  *       '200':
  *         description: The schedule was updated
- *       '404':
- *         description: The schedule was not found
+ *       '401':
+ *         description: Unauthorized
+ *       '403':
+ *         description: Forbidden
  */
-router.put('/:tripCode', scheduleController.updateScheduleByCode);
+router.put('/:tripCode', authenticate, checkPermission(['admin', 'operator']), scheduleController.updateScheduleByCode);
+
 
 /**
  * @swagger
  * /api/v1/schedules/{tripCode}:
  *   delete:
- *     summary: Delete a scheduled trip by its trip code
+ *     summary: Delete a scheduled trip (Admin or Operator Only)
  *     tags: [Schedules]
+ *     security:
+ *       - ApiKeyAuth: []
  *     parameters:
  *       - in: path
  *         name: tripCode
+ *         required: true
  *         schema:
  *           type: number
- *         required: true
  *         description: The trip code
  *     responses:
  *       '200':
- *         description: The scheduled trip was deleted
- *       '404':
- *         description: The schedule was not found
+ *         description: The schedule was deleted
+ *       '401':
+ *         description: Unauthorized
+ *       '403':
+ *         description: Forbidden
  */
-router.delete('/:tripCode', scheduleController.deleteScheduleByCode);
+router.delete('/:tripCode', authenticate, checkPermission(['admin', 'operator']), scheduleController.deleteScheduleByCode);
 
 module.exports = router;

@@ -1,13 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const routeController = require('../controllers/route.controller');
+const { authenticate, checkPermission } = require('../middleware/auth.middleware');
 
 /**
  * @swagger
  * /api/v1/routes:
  *   post:
- *     summary: Create a new bus route
+ *     summary: Create a new bus route (Admin Only)
  *     tags: [Routes]
+ *     security:
+ *       - ApiKeyAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -17,10 +20,12 @@ const routeController = require('../controllers/route.controller');
  *     responses:
  *       '201':
  *         description: The route was successfully created
- *       '500':
- *         description: Server error
+ *       '403':
+ *         description: Forbidden
  */
-router.post('/', routeController.createRoute);
+router.post('/', authenticate, checkPermission(['admin']), routeController.createRoute);
+
+
 
 /**
  * @swagger
@@ -76,14 +81,16 @@ router.get('/:routeNumber', routeController.getRouteByNumber);
  * @swagger
  * /api/v1/routes/{routeNumber}:
  *   put:
- *     summary: Update a route by its number
+ *     summary: Update a route by its number (Admin Only)
  *     tags: [Routes]
+ *     security:
+ *       - ApiKeyAuth: []
  *     parameters:
  *       - in: path
  *         name: routeNumber
+ *         required: true
  *         schema:
  *           type: string
- *         required: true
  *         description: The route number
  *     requestBody:
  *       required: true
@@ -94,31 +101,37 @@ router.get('/:routeNumber', routeController.getRouteByNumber);
  *     responses:
  *       '200':
  *         description: The route was updated
- *       '404':
- *         description: The route was not found
+ *       '403':
+ *         description: Forbidden
  */
-router.put('/:routeNumber', routeController.updateRouteByNumber);
+router.put('/:routeNumber', authenticate, checkPermission(['admin']), routeController.updateRouteByNumber);
+
+
 
 /**
  * @swagger
  * /api/v1/routes/{routeNumber}:
  *   delete:
- *     summary: Delete a route by its number
+ *     summary: Delete a route by its number (Admin Only)
  *     tags: [Routes]
+ *     security:
+ *       - ApiKeyAuth: []
  *     parameters:
  *       - in: path
  *         name: routeNumber
+ *         required: true
  *         schema:
  *           type: string
- *         required: true
  *         description: The route number
  *     responses:
  *       '200':
  *         description: The route was deleted
- *       '404':
- *         description: The route was not found
+ *       '403':
+ *         description: Forbidden
  */
-router.delete('/:routeNumber', routeController.deleteRouteByNumber);
+router.delete('/:routeNumber', authenticate, checkPermission(['admin']), routeController.deleteRouteByNumber);
+
+
 
 /**
  * @swagger
