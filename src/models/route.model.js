@@ -10,7 +10,6 @@ const routeSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  // Add the waypoints field as an array of strings
   waypoints: {
     type: [String],
     required: false, // Make it optional

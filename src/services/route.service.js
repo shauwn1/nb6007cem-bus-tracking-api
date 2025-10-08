@@ -2,98 +2,109 @@ const Route = require('../models/route.model');
 const Schedule = require('../models/schedule.model');
 const Location = require('../models/location.model');
 
-// Contains the core logic for creating a route in the database
+// Creates a new route document in the database.
 const createRoute = async (routeData) => {
   try {
+    // Save the new route to the database.
     const newRoute = await Route.create(routeData);
     return newRoute;
   } catch (error) {
-    // Propagates any database errors (e.g., unique key violation) up to the controller
+    // Pass any database errors up to the controller.
     throw new Error(error.message);
   }
 };
 
-// Service to get routes with filtering
+// Gets a list of routes, with optional filtering.
 const getRoutes = async (filters) => {
   const query = {};
 
+  // If a start point is provided, add it to the search query.
   if (filters.startPoint) {
+    // Use a flexible, case-insensitive search.
     query.startPoint = new RegExp(filters.startPoint, 'i');
   }
 
+  // If an end point is provided, add it to the search query.
   if (filters.endPoint) {
     query.endPoint = new RegExp(filters.endPoint, 'i');
   }
   
+  // If a route number is provided, add it to the search query.
   if (filters.routeNumber) {
     query.routeNumber = filters.routeNumber;
   }
 
+  // Find all routes in the database that match the query.
   const routes = await Route.find(query);
   return routes;
 };
 
-// Service to get a single route by its route number
+// Gets a single route from the database using its unique route number.
 const getRouteByNumber = async (routeNumber) => {
+  // Find the route that matches the given number.
   const route = await Route.findOne({ routeNumber: routeNumber });
   return route;
 };
 
-// Service to update a route by its route number
+// Finds a route by its number and updates it with new data.
 const updateRouteByNumber = async (routeNumber, updateData) => {
+  // Find the route and update it, returning the new, updated version.
   const updatedRoute = await Route.findOneAndUpdate(
     { routeNumber: routeNumber },
     updateData,
-    { new: true, runValidators: true } // Return the updated document
+    { new: true, runValidators: true }
   );
   return updatedRoute;
 };
 
-// Service to delete a route by its route number
+// Finds a route by its number and deletes it.
 const deleteRouteByNumber = async (routeNumber) => {
+  // Find and delete the route from the database.
   const deletedRoute = await Route.findOneAndDelete({ routeNumber: routeNumber });
   return deletedRoute;
 };
 
-// Service to get live locations of all active buses on a route
+// Gets the live locations of all active buses currently on a specific route.
 const getActiveBusLocationsByRoute = async (routeNumber) => {
-  // 1. Find the route by its number
+  // Find the route document using its number.
   const route = await Route.findOne({ routeNumber: routeNumber });
   if (!route) {
     throw new Error('Route not found');
   }
 
-  // 2. Find all active (departed) schedules for this route
+  // Find all "Departed" trips for that specific route.
   const activeSchedules = await Schedule.find({
     routeId: route._id,
     status: 'Departed'
-  }).populate('busId'); // Populate bus details
+  }).populate('busId'); // Also fetch the full details of the bus for each trip.
 
+  // If no buses are currently active on this route, return an empty list.
   if (activeSchedules.length === 0) {
-    return []; // No active buses on this route
+    return [];
   }
 
-  // 3. For each active schedule, find its latest location
+  // For each active trip, find its most recent location update.
   const locationPromises = activeSchedules.map(schedule => {
+    // Find the latest location for this specific trip.
     return Location.findOne({ scheduleId: schedule._id })
       .sort({ timestamp: -1 })
       .then(location => {
         if (location) {
-          // Combine bus info with location info for a useful response
+          // If a location is found, create a clean object with the bus and location details.
           return {
-            bus: schedule.busId, // The populated bus details
+            bus: schedule.busId,
             location: location.coordinates,
             timestamp: location.timestamp
           };
         }
-        return null;
+        return null; // Return null if no location is found for this trip.
       });
   });
 
-  // Wait for all location lookups to complete
+  // Wait for all the location searches to finish.
   const locations = await Promise.all(locationPromises);
 
-  // Filter out any buses that have a schedule but no location data yet
+  // Remove any trips that didn't have location data.
   return locations.filter(loc => loc !== null);
 };
 
@@ -103,5 +114,5 @@ module.exports = {
   getRouteByNumber,
   updateRouteByNumber,
   deleteRouteByNumber,
-  getActiveBusLocationsByRoute, // Export the new function
+  getActiveBusLocationsByRoute,
 };
